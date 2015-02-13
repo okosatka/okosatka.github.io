@@ -1,0 +1,121 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>ternary code</title>
+    <description>There are 10 kinds of people, those who understand binary and those who not</description>
+    <link>http://okosatka.github.io/</link>
+    <atom:link href="http://okosatka.github.io/feed.xml" rel="self" type="application/rss+xml" />
+    
+      <item>
+        <title>dockerize your app</title>
+        <description>&lt;p&gt;I had time to play with &lt;a href=&quot;http://www.docker.com&quot;&gt;Docker&lt;/a&gt; so I was able to create
+an example how to dockerize java application with minimal effort.&lt;/p&gt;
+
+&lt;p&gt;Let&amp;rsquo;s dockerize JAX-RS resource served on Grizzly container. This app is simple
+as it can be and it is essentially &lt;a href=&quot;https://github.com/jersey/jersey/tree/master/examples/helloworld&quot;&gt;Jersey Hello World Example&lt;/a&gt; with some
+small changes.
+My only contribution is &lt;code&gt;Dockerfile&lt;/code&gt; &lt;a href=&quot;https://github.com/okosatka/dockerize-gradle-app/blob/master/src/main/dist/Dockerfile&quot;&gt;template&lt;/a&gt;
+and &lt;a href=&quot;https://github.com/okosatka/dockerize-gradle-app/blob/master/build.gradle&quot;&gt;a couple gradle tasks&lt;/a&gt;
+which make all distribution files you need to create a docker image.&lt;/p&gt;
+
+&lt;h2 id=&quot;configuration&quot;&gt;configuration&lt;/h2&gt;
+
+&lt;p&gt;There are only few configuration options centralized into &lt;code&gt;build.gradle&lt;/code&gt;
+and &lt;code&gt;dockerize&lt;/code&gt; gradle task which replaces tokens like &lt;code&gt;BASE_IMAGE&lt;/code&gt;
+in build directory.&lt;/p&gt;
+
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-groovy&quot; data-lang=&quot;groovy&quot;&gt;&lt;span class=&quot;n&quot;&gt;ext&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;{&lt;/span&gt;
+    &lt;span class=&quot;c1&quot;&gt;// lib version&lt;/span&gt;
+    &lt;span class=&quot;n&quot;&gt;jerseyVersion&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&amp;quot;2.14&amp;quot;&lt;/span&gt;
+
+    &lt;span class=&quot;c1&quot;&gt;// dockerfile template attributes&lt;/span&gt;
+    &lt;span class=&quot;n&quot;&gt;baseImage&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&amp;quot;dockerfile/ubuntu&amp;quot;&lt;/span&gt;
+    &lt;span class=&quot;n&quot;&gt;port&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&amp;quot;4004&amp;quot;&lt;/span&gt;
+&lt;span class=&quot;o&quot;&gt;}&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-groovy&quot; data-lang=&quot;groovy&quot;&gt;&lt;span class=&quot;n&quot;&gt;task&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;dockerize&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nl&quot;&gt;type:&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Copy&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;nl&quot;&gt;dependsOn:&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;tasks&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;fatJar&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;{&lt;/span&gt;
+    &lt;span class=&quot;n&quot;&gt;from&lt;/span&gt; &lt;span class=&quot;s1&quot;&gt;&amp;#39;src/main/dist/Dockerfile&amp;#39;&lt;/span&gt;
+    &lt;span class=&quot;n&quot;&gt;into&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&amp;quot;${buildDir}/dockerize&amp;quot;&lt;/span&gt;
+    &lt;span class=&quot;n&quot;&gt;filter&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;ReplaceTokens&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;nl&quot;&gt;tokens:&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;APP_NAME&lt;/span&gt;   &lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;project&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;name&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;,&lt;/span&gt;
+                                   &lt;span class=&quot;nl&quot;&gt;APP_VERSION:&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;project&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;version&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;,&lt;/span&gt;
+                                   &lt;span class=&quot;n&quot;&gt;BASE_IMAGE&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;baseImage&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;,&lt;/span&gt;
+                                   &lt;span class=&quot;n&quot;&gt;PORT&lt;/span&gt;       &lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;port&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;])&lt;/span&gt;
+&lt;span class=&quot;o&quot;&gt;}&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;This is an example of &lt;code&gt;Dockerfile&lt;/code&gt; &lt;a href=&quot;https://github.com/okosatka/dockerize-gradle-app/blob/master/src/main/dist/Dockerfile&quot;&gt;template&lt;/a&gt; which tokens are replaced by
+gradle task above.&lt;/p&gt;
+
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-dockerfile&quot; data-lang=&quot;dockerfile&quot;&gt;&lt;span class=&quot;c&quot;&gt;#&lt;/span&gt;
+&lt;span class=&quot;c&quot;&gt;# @APP_NAME@ dockerfile.&lt;/span&gt;
+&lt;span class=&quot;c&quot;&gt;#&lt;/span&gt;
+
+&lt;span class=&quot;c&quot;&gt;# Pull base image.&lt;/span&gt;
+&lt;span class=&quot;k&quot;&gt;FROM&lt;/span&gt; @BASE_IMAGE@
+
+&lt;span class=&quot;c&quot;&gt;# Install Java.&lt;/span&gt;
+&lt;span class=&quot;k&quot;&gt;RUN&lt;/span&gt; &lt;span class=&quot;err&quot;&gt;\&lt;/span&gt;
+  &lt;span class=&quot;nb&quot;&gt;echo &lt;/span&gt;oracle-java8-installer shared/accepted-oracle-license-v1-1 &lt;span class=&quot;k&quot;&gt;select&lt;/span&gt; &lt;span class=&quot;nb&quot;&gt;true&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;|&lt;/span&gt; debconf-set-selections &lt;span class=&quot;o&quot;&gt;&amp;amp;&amp;amp;&lt;/span&gt; &lt;span class=&quot;err&quot;&gt;\&lt;/span&gt;
+  add-apt-repository -y ppa:webupd8team/java &lt;span class=&quot;o&quot;&gt;&amp;amp;&amp;amp;&lt;/span&gt; &lt;span class=&quot;err&quot;&gt;\&lt;/span&gt;
+  apt-get update &lt;span class=&quot;o&quot;&gt;&amp;amp;&amp;amp;&lt;/span&gt; &lt;span class=&quot;err&quot;&gt;\&lt;/span&gt;
+  apt-get install -y oracle-java8-installer &lt;span class=&quot;o&quot;&gt;&amp;amp;&amp;amp;&lt;/span&gt; &lt;span class=&quot;err&quot;&gt;\&lt;/span&gt;
+  rm -rf /var/lib/apt/lists/* &lt;span class=&quot;o&quot;&gt;&amp;amp;&amp;amp;&lt;/span&gt; &lt;span class=&quot;err&quot;&gt;\&lt;/span&gt;
+  rm -rf /var/cache/oracle-jdk8-installer
+
+&lt;span class=&quot;c&quot;&gt;# Define commonly used JAVA_HOME variable&lt;/span&gt;
+&lt;span class=&quot;k&quot;&gt;ENV&lt;/span&gt; JAVA_HOME /usr/lib/jvm/java-8-oracle
+
+COPY ./@APP_NAME@-@APP_VERSION@.jar /@APP_NAME@/
+
+&lt;span class=&quot;c&quot;&gt;# Define working directory.&lt;/span&gt;
+&lt;span class=&quot;k&quot;&gt;WORKDIR&lt;/span&gt; /work-dir
+
+&lt;span class=&quot;k&quot;&gt;ENTRYPOINT&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&amp;quot;java&amp;quot;&lt;/span&gt;, &lt;span class=&quot;s2&quot;&gt;&amp;quot;-jar&amp;quot;&lt;/span&gt;, &lt;span class=&quot;s2&quot;&gt;&amp;quot;/@APP_NAME@/@APP_NAME@-@APP_VERSION@.jar&amp;quot;&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;
+
+&lt;span class=&quot;k&quot;&gt;EXPOSE&lt;/span&gt; @PORT@&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;h2 id=&quot;build-app&quot;&gt;build app&lt;/h2&gt;
+
+&lt;p&gt;Distribution task makes all resources you need and places them into &lt;code&gt;${buildDir}/distribution&lt;/code&gt;.&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;Dockerfile - transformed template located in &lt;code&gt;src/main/dist&lt;/code&gt;&lt;/li&gt;
+&lt;li&gt;fat jar - contains all needed classes&lt;/li&gt;
+&lt;/ul&gt;
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-text&quot; data-lang=&quot;text&quot;&gt;gradle distribution
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;Distribution task depends on &lt;code&gt;dockerize&lt;/code&gt; task and &lt;code&gt;fatjar&lt;/code&gt; task.&lt;/p&gt;
+
+&lt;h2 id=&quot;build-a-docker-image&quot;&gt;build a docker image&lt;/h2&gt;
+
+&lt;p&gt;Directory &lt;code&gt;${buildDir}/distribution&lt;/code&gt; contains all you need to create docker image.
+Go to the distribution directory and build a docker image with tag &lt;code&gt;jersey\hello&lt;/code&gt;&lt;/p&gt;
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-text&quot; data-lang=&quot;text&quot;&gt;cd build/distribution
+docker build -t jersey/hello .
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;h2 id=&quot;run-docker-image&quot;&gt;run docker image&lt;/h2&gt;
+
+&lt;p&gt;Argument -p means publishing exposed port to the host. We configured Grizzly be running on port 4004 and we publish it as 4001 at host.&lt;/p&gt;
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-text&quot; data-lang=&quot;text&quot;&gt;docker run -p 4001:4004 -d --name hello-4001 jersey/hello
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;Then check the container is running&lt;/p&gt;
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-text&quot; data-lang=&quot;text&quot;&gt;docker ps
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;Output should look like this&lt;/p&gt;
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-text&quot; data-lang=&quot;text&quot;&gt;CONTAINER ID        IMAGE                 COMMAND                CREATED             STATUS              PORTS                    NAMES
+9656759a854d        jersey/hello:latest   &amp;quot;java -jar /dockeriz   10 minutes ago      Up 8 seconds        0.0.0.0:4001-&amp;gt;4004/tcp   hello-4001
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;h2 id=&quot;test&quot;&gt;test&lt;/h2&gt;
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-text&quot; data-lang=&quot;text&quot;&gt;curl localhost:4001/base/helloworld
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;&amp;hellip;and here we go&lt;/p&gt;
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-text&quot; data-lang=&quot;text&quot;&gt;Hello World!
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;&lt;a href=&quot;http://github.com/okosatka/dockerize-gradle-app&quot;&gt;Repo&lt;/a&gt; on GitHub&lt;/p&gt;
+</description>
+        <pubDate>Thu, 12 Feb 2015 01:30:00 +0100</pubDate>
+        <link>http://okosatka.github.io/docker/gradle/jersey/grizzly/java/2015/02/12/dockerize-your-app/</link>
+        <guid isPermaLink="true">http://okosatka.github.io/docker/gradle/jersey/grizzly/java/2015/02/12/dockerize-your-app/</guid>
+      </item>
+    
+  </channel>
+</rss>

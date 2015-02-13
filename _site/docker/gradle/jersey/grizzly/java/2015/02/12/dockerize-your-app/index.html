@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <title>dockerize your app &#8211; ternary code</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="This is an example how to simply dockerize your application with minimal effort.">
+    <meta name="author" content="Ondrej Kosatka">
+    <meta name="keywords" content="docker, gradle, jersey, grizzly, java">
+    <link rel="canonical" href="http://okosatka.github.io/docker/gradle/jersey/grizzly/java/2015/02/12/dockerize-your-app/">
+
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="/css/pixyll.css" type="text/css">
+
+    <!-- Fonts -->
+    <link href='//fonts.googleapis.com/css?family=Merriweather:900,900italic,300,300italic' rel='stylesheet' type='text/css'>
+    <link href='//fonts.googleapis.com/css?family=Lato:900,300' rel='stylesheet' type='text/css'>
+    
+      <link href="//maxcdn.bootstrapcdn.com/font-awesome/4.2.0/css/font-awesome.min.css" rel="stylesheet">
+    
+
+    <!-- Open Graph -->
+    <!-- From: https://github.com/mmistakes/hpstr-jekyll-theme/blob/master/_includes/head.html -->
+    <meta property="og:locale" content="en_US">
+    <meta property="og:type" content="article">
+    <meta property="og:title" content="dockerize your app">
+    <meta property="og:description" content="There are 10 kinds of people, those who understand binary and those who not">
+    <meta property="og:url" content="http://okosatka.github.io/docker/gradle/jersey/grizzly/java/2015/02/12/dockerize-your-app/">
+    <meta property="og:site_name" content="ternary code">
+
+    <!-- Icons -->
+    <link rel="apple-touch-icon" sizes="57x57" href="apple-touch-icon-57x57.png">
+    <link rel="apple-touch-icon" sizes="114x114" href="apple-touch-icon-114x114.png">
+    <link rel="apple-touch-icon" sizes="72x72" href="apple-touch-icon-72x72.png">
+    <link rel="apple-touch-icon" sizes="144x144" href="apple-touch-icon-144x144.png">
+    <link rel="apple-touch-icon" sizes="60x60" href="apple-touch-icon-60x60.png">
+    <link rel="apple-touch-icon" sizes="120x120" href="apple-touch-icon-120x120.png">
+    <link rel="apple-touch-icon" sizes="76x76" href="apple-touch-icon-76x76.png">
+    <link rel="apple-touch-icon" sizes="152x152" href="apple-touch-icon-152x152.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon-180x180.png">
+    <link rel="icon" type="image/png" href="favicon-192x192.png" sizes="192x192">
+    <link rel="icon" type="image/png" href="favicon-160x160.png" sizes="160x160">
+    <link rel="icon" type="image/png" href="favicon-96x96.png" sizes="96x96">
+    <link rel="icon" type="image/png" href="favicon-16x16.png" sizes="16x16">
+    <link rel="icon" type="image/png" href="favicon-32x32.png" sizes="32x32">
+</head>
+
+<body class="">
+  <div class="site-wrap">
+    <header class="site-header px2 px-responsive">
+  <div class="mt2 wrap">
+    <div class="measure">
+      <a href="http://okosatka.github.io" class="site-title">ternary code</a>
+      <nav class="site-nav right">
+        <a href="/about/">about</a>
+<a href="/contact/">contact</a>
+
+      </nav>
+      <div class="clearfix"></div>
+    </div>
+  </div>
+</header>
+
+
+    <div class="post p2 p-responsive wrap" role="main">
+      <div class="measure">
+        
+
+
+<div class="post-header mb2">
+  <h1>dockerize your app</h1>
+  <span class="post-meta">Feb 12, 2015</span><br>
+  
+  <span class="post-meta small">2 minute read</span>
+</div>
+
+<article class="post-content">
+  <p>I had time to play with <a href="http://www.docker.com">Docker</a> so I was able to create
+an example how to dockerize java application with minimal effort.</p>
+
+<p>Let&rsquo;s dockerize JAX-RS resource served on Grizzly container. This app is simple
+as it can be and it is essentially <a href="https://github.com/jersey/jersey/tree/master/examples/helloworld">Jersey Hello World Example</a> with some
+small changes.
+My only contribution is <code>Dockerfile</code> <a href="https://github.com/okosatka/dockerize-gradle-app/blob/master/src/main/dist/Dockerfile">template</a>
+and <a href="https://github.com/okosatka/dockerize-gradle-app/blob/master/build.gradle">a couple gradle tasks</a>
+which make all distribution files you need to create a docker image.</p>
+
+<h2 id="configuration">configuration</h2>
+
+<p>There are only few configuration options centralized into <code>build.gradle</code>
+and <code>dockerize</code> gradle task which replaces tokens like <code>BASE_IMAGE</code>
+in build directory.</p>
+
+<div class="highlight"><pre><code class="language-groovy" data-lang="groovy"><span class="n">ext</span> <span class="o">{</span>
+    <span class="c1">// lib version</span>
+    <span class="n">jerseyVersion</span> <span class="o">=</span> <span class="s2">&quot;2.14&quot;</span>
+
+    <span class="c1">// dockerfile template attributes</span>
+    <span class="n">baseImage</span> <span class="o">=</span> <span class="s2">&quot;dockerfile/ubuntu&quot;</span>
+    <span class="n">port</span> <span class="o">=</span> <span class="s2">&quot;4004&quot;</span>
+<span class="o">}</span></code></pre></div>
+
+<div class="highlight"><pre><code class="language-groovy" data-lang="groovy"><span class="n">task</span> <span class="nf">dockerize</span><span class="o">(</span><span class="nl">type:</span> <span class="n">Copy</span><span class="o">,</span> <span class="nl">dependsOn:</span> <span class="n">tasks</span><span class="o">.</span><span class="na">fatJar</span><span class="o">)</span> <span class="o">{</span>
+    <span class="n">from</span> <span class="s1">&#39;src/main/dist/Dockerfile&#39;</span>
+    <span class="n">into</span> <span class="s2">&quot;${buildDir}/dockerize&quot;</span>
+    <span class="n">filter</span><span class="o">(</span><span class="n">ReplaceTokens</span><span class="o">,</span> <span class="nl">tokens:</span> <span class="o">[</span><span class="n">APP_NAME</span>   <span class="o">:</span> <span class="n">project</span><span class="o">.</span><span class="na">name</span><span class="o">,</span>
+                                   <span class="nl">APP_VERSION:</span> <span class="n">project</span><span class="o">.</span><span class="na">version</span><span class="o">,</span>
+                                   <span class="n">BASE_IMAGE</span> <span class="o">:</span> <span class="n">baseImage</span><span class="o">,</span>
+                                   <span class="n">PORT</span>       <span class="o">:</span> <span class="n">port</span><span class="o">])</span>
+<span class="o">}</span></code></pre></div>
+
+<p>This is an example of <code>Dockerfile</code> <a href="https://github.com/okosatka/dockerize-gradle-app/blob/master/src/main/dist/Dockerfile">template</a> which tokens are replaced by
+gradle task above.</p>
+
+<div class="highlight"><pre><code class="language-dockerfile" data-lang="dockerfile"><span class="c">#</span>
+<span class="c"># @APP_NAME@ dockerfile.</span>
+<span class="c">#</span>
+
+<span class="c"># Pull base image.</span>
+<span class="k">FROM</span> @BASE_IMAGE@
+
+<span class="c"># Install Java.</span>
+<span class="k">RUN</span> <span class="err">\</span>
+  <span class="nb">echo </span>oracle-java8-installer shared/accepted-oracle-license-v1-1 <span class="k">select</span> <span class="nb">true</span> <span class="p">|</span> debconf-set-selections <span class="o">&amp;&amp;</span> <span class="err">\</span>
+  add-apt-repository -y ppa:webupd8team/java <span class="o">&amp;&amp;</span> <span class="err">\</span>
+  apt-get update <span class="o">&amp;&amp;</span> <span class="err">\</span>
+  apt-get install -y oracle-java8-installer <span class="o">&amp;&amp;</span> <span class="err">\</span>
+  rm -rf /var/lib/apt/lists/* <span class="o">&amp;&amp;</span> <span class="err">\</span>
+  rm -rf /var/cache/oracle-jdk8-installer
+
+<span class="c"># Define commonly used JAVA_HOME variable</span>
+<span class="k">ENV</span> JAVA_HOME /usr/lib/jvm/java-8-oracle
+
+COPY ./@APP_NAME@-@APP_VERSION@.jar /@APP_NAME@/
+
+<span class="c"># Define working directory.</span>
+<span class="k">WORKDIR</span> /work-dir
+
+<span class="k">ENTRYPOINT</span> <span class="o">[</span><span class="s2">&quot;java&quot;</span>, <span class="s2">&quot;-jar&quot;</span>, <span class="s2">&quot;/@APP_NAME@/@APP_NAME@-@APP_VERSION@.jar&quot;</span><span class="o">]</span>
+
+<span class="k">EXPOSE</span> @PORT@</code></pre></div>
+
+<h2 id="build-app">build app</h2>
+
+<p>Distribution task makes all resources you need and places them into <code>${buildDir}/distribution</code>.</p>
+
+<ul>
+<li>Dockerfile - transformed template located in <code>src/main/dist</code></li>
+<li>fat jar - contains all needed classes</li>
+</ul>
+<div class="highlight"><pre><code class="language-text" data-lang="text">gradle distribution
+</code></pre></div>
+<p>Distribution task depends on <code>dockerize</code> task and <code>fatjar</code> task.</p>
+
+<h2 id="build-a-docker-image">build a docker image</h2>
+
+<p>Directory <code>${buildDir}/distribution</code> contains all you need to create docker image.
+Go to the distribution directory and build a docker image with tag <code>jersey\hello</code></p>
+<div class="highlight"><pre><code class="language-text" data-lang="text">cd build/distribution
+docker build -t jersey/hello .
+</code></pre></div>
+<h2 id="run-docker-image">run docker image</h2>
+
+<p>Argument -p means publishing exposed port to the host. We configured Grizzly be running on port 4004 and we publish it as 4001 at host.</p>
+<div class="highlight"><pre><code class="language-text" data-lang="text">docker run -p 4001:4004 -d --name hello-4001 jersey/hello
+</code></pre></div>
+<p>Then check the container is running</p>
+<div class="highlight"><pre><code class="language-text" data-lang="text">docker ps
+</code></pre></div>
+<p>Output should look like this</p>
+<div class="highlight"><pre><code class="language-text" data-lang="text">CONTAINER ID        IMAGE                 COMMAND                CREATED             STATUS              PORTS                    NAMES
+9656759a854d        jersey/hello:latest   &quot;java -jar /dockeriz   10 minutes ago      Up 8 seconds        0.0.0.0:4001-&gt;4004/tcp   hello-4001
+</code></pre></div>
+<h2 id="test">test</h2>
+<div class="highlight"><pre><code class="language-text" data-lang="text">curl localhost:4001/base/helloworld
+</code></pre></div>
+<p>&hellip;and here we go</p>
+<div class="highlight"><pre><code class="language-text" data-lang="text">Hello World!
+</code></pre></div>
+<p><a href="http://github.com/okosatka/dockerize-gradle-app">Repo</a> on GitHub</p>
+
+</article>
+
+
+
+
+  <div id="disqus_thread"></div>
+  <script type="text/javascript">
+    var disqus_shortname  = 'ondrejkosatka';
+    var disqus_identifier = '/docker/gradle/jersey/grizzly/java/2015/02/12/dockerize-your-app';
+
+    (function() {
+      var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+      dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+      (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    })();
+  </script>
+  <noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+
+
+
+
+      </div>
+    </div>
+  </div>
+
+  <footer class="footer">
+  <div class="p2 wrap">
+    <div class="measure mt1 center">
+      
+        <div class="social-icons">
+    
+      <a class="fa fa-github" href="https://github.com/okosatka"></a>
+    
+    
+      <a class="fa fa-stack-overflow" href="https://stackoverflow.com/users/324140"></a>
+    
+    
+    
+      <a class="fa fa-twitter" href="https://twitter.com/ondrejkosatka"></a>
+    
+    
+      <a class="fa fa-google-plus" href="https://plus.google.com/+OndřejKošatka/posts"></a>
+    
+    
+      <a class="fa fa-envelope" href="mailto:ondrej.kosatka@gmail.com"></a>
+    
+    
+      <a class="fa fa-linkedin" href="https://www.linkedin.com/in/ondrejkosatka"></a>
+    
+    
+    
+    
+</div>
+
+      
+      <small>
+        This blog theme is base on wonderfull <a href="http://johnotander.com">John Otander</a>'s (<a href="https://twitter.com/4lpine">@4lpine</a>)
+        <a href="https://github.com/johnotander/pixyll">Pixyll</a>.
+      </small>
+    </div>
+  </div>
+</footer>
+
+
+<script>
+(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+})(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+ga('create', 'UA-59748602-1', 'auto');
+ga('send', 'pageview');
+
+</script>
+
+
+</body>
+</html>
